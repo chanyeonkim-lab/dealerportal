@@ -1,0 +1,86 @@
+import {test,expect} from '@playwright/test';
+test('dealer contract review reaches internal sales reports',async({page})=>{
+ await page.goto('/');await expect(page.getByRole('heading',{name:'Your dealership, in motion.'})).toBeVisible();
+ await page.getByRole('button',{name:'New contract'}).click();
+ await expect(page.getByRole('button',{name:'Save contract'})).toBeDisabled();
+ await page.getByRole('button',{name:'Or explore a prepared example'}).click();
+ await expect(page.getByText('PREPARED EXAMPLE',{exact:true})).toBeVisible();
+ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Save contract'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await page.getByRole('button',{name:'Hyundai internal',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Contract outputs'})).toBeVisible();
+ await expect(page.getByRole('cell',{name:'Prepared example',exact:true}).first()).toBeVisible();
+ await page.screenshot({path:'/tmp/dealer-admin.png',fullPage:true});
+});
+test('published course reaches dealer, retains quiz score and appears in internal performance',async({page})=>{
+ const title='E2E charging confidence '+Date.now();
+ await page.goto('/');await page.getByRole('button',{name:'Hyundai internal',exact:true}).click();
+ await page.getByRole('button',{name:'Training management',exact:true}).click();
+ await page.getByRole('textbox',{name:'Course title'}).fill(title);
+ await page.getByRole('textbox',{name:'Training material'}).fill('Explain winter range with conditions, check the route and distinguish public DC charging from home charging. Link features to customer needs.');
+ await page.getByRole('button',{name:'Publish course & quiz'}).click();
+ await expect(page.getByRole('heading',{name:title,exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Dealer',exact:true}).click();
+ await page.getByRole('button',{name:'Learning hub',exact:true}).click();
+ await page.getByRole('combobox',{name:'Choose your course'}).selectOption({label:title});
+ await expect(page.getByRole('heading',{name:title,exact:true})).toBeVisible();
+ await page.getByRole('radio',{name:'Explain the conditions and check their route and charging options.'}).check();
+ await page.getByRole('radio',{name:'Installation suitability, vehicle, power supply and routine.'}).check();
+ await page.getByRole('radio',{name:'Link relevant features to needs and invite practical checks.'}).check();
+ await page.getByRole('button',{name:'Check my answers'}).click();
+ await expect(page.getByRole('status').filter({hasText:'3/3 correct'})).toBeVisible();
+ await page.getByRole('button',{name:'Hyundai internal',exact:true}).click();
+ await page.getByRole('button',{name:'Learning performance',exact:true}).click();
+ const row=page.getByRole('row').filter({has:page.getByRole('cell',{name:title,exact:true})});
+ await expect(row.first()).toContainText('Passed (3/3)');
+ await page.screenshot({path:'/tmp/dealer-training.png',fullPage:true});
+});
+test('assistant sample response identifies its evidence and sample mode',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:'Open sales assistant'}).click();
+ await page.getByRole('textbox',{name:'Question for sales assistant'}).fill('winter range');
+ await page.getByRole('button',{name:'Send question'}).click();
+ await expect(page.getByText('PREPARED GUIDANCE',{exact:true})).toBeVisible();
+ await expect(page.getByText('AU-TRAIN-01 · Range conversations',{exact:true})).toBeVisible();
+});
+
+test('static preview persists locally and sends no API or upload requests',async({page})=>{
+ test.skip(process.env.STATIC_PREVIEW_CHECK!=='1','Only for the static deployment target.');
+ const apiRequests:string[]=[];
+ page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/api/'))apiRequests.push(request.url());});
+ await page.goto('/');
+ await expect(page.getByText('Interactive preview · Example data only',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'New contract'}).click();
+ await page.getByRole('button',{name:'Or explore a prepared example'}).click();
+ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Save contract'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await page.reload();await page.getByRole('button',{name:'Contracts',exact:false}).first().click();
+ await expect(page.getByRole('cell',{name:'Prepared example',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'New contract'}).click();
+ await page.locator('input[type=file]').setInputFiles({name:'fictional-contract.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7 fictional preview document')});
+ await expect(page.getByRole('alert').filter({hasText:'No file has been uploaded'})).toBeVisible();
+ expect(apiRequests).toEqual([]);
+});
+
+test('mobile navigation and contract review stay usable with keyboard and narrow screens',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/');
+ await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.getByRole('button',{name:'Open menu'}).click();
+ await page.getByRole('button',{name:'Contracts',exact:false}).first().click();
+ await expect(page.getByRole('heading',{name:'Contracts, with confidence.'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Open menu'})).toHaveAttribute('aria-expanded','false');
+ await page.getByRole('button',{name:'New contract'}).click();
+ await page.getByRole('button',{name:'Or explore a prepared example'}).click();
+ await expect(page.getByRole('heading',{name:'Prepared example reference'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Save contract'})).toBeDisabled();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'New contract'})).toBeFocused();
+ await page.getByRole('button',{name:'Open menu'}).click();
+ await page.getByRole('button',{name:'Learning hub',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'EV sales essentials',exact:true})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

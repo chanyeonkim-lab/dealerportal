@@ -1,0 +1,21 @@
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+const root=process.cwd(),stage=path.join(root,'.preview-build');
+rmSync(stage,{recursive:true,force:true});mkdirSync(stage,{recursive:true});
+cpSync(path.join(root,'app'),path.join(stage,'app'),{recursive:true,filter:p=>p!==path.join(root,'app','api')});
+cpSync(path.join(root,'public'),path.join(stage,'public'),{recursive:true});
+mkdirSync(path.join(stage,'lib'));
+for(const file of ['domain.ts','training-schema.ts','client-api.ts'])cpSync(path.join(root,'lib',file),path.join(stage,'lib',file));
+// Only the client-side course type is needed; never copy SQLite or AI server code.
+const adminFile=path.join(stage,'app','admin.tsx');
+writeFileSync(adminFile,readFileSync(adminFile,'utf8').replace("@/lib/training'","@/lib/training-schema'"));
+cpSync(path.join(root,'tsconfig.json'),path.join(stage,'tsconfig.json'));
+cpSync(path.join(root,'package.json'),path.join(stage,'package.json'));
+writeFileSync(path.join(stage,'next.config.mjs'),`export default {output:'export',trailingSlash:true,turbopack:{root:${JSON.stringify(root)}}};\n`);
+const env={...process.env,NEXT_PUBLIC_STATIC_PREVIEW:'1'};
+delete env.OPENAI_API_KEY;delete env.DEALER_OPENAI_API_KEY;
+execFileSync(process.execPath,[path.join(root,'node_modules/next/dist/bin/next'),'build'],{cwd:stage,env,stdio:'inherit'});
+const output=path.join(root,'preview-dist');rmSync(output,{recursive:true,force:true});cpSync(path.join(stage,'out'),output,{recursive:true});
+writeFileSync(path.join(output,'_headers'),'/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n');
+console.log('Static preview built at preview-dist/. No server routes, credentials or existing records included.');
