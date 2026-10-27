@@ -34,3 +34,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 STATIC_PREVIEW_CHECK=1 npm run test:e2
 ```
 
 실제 외부 배포 후에는 발급받은 HTTPS 주소로 PLAYWRIGHT_BASE_URL을 지정해 같은 기능을 재확인합니다. 외부 URL의 검증 없이 ‘배포 완료’라고 부르지 않습니다.
+
+## 비공개 Sites 배포
+
+`npm run build:sites`는 검증된 정적 미리보기를 `dist/`에 준비합니다. `.openai/hosting.json`의 기존 project_id를 재사용합니다. 배포 아카이브에는 이 manifest와 `dist/`만 포함하고 서버 코드, 환경 파일, SQLite, node_modules는 포함하지 않습니다. GitHub main과 별도로 Sites 소스 저장소에 일치하는 커밋을 먼저 동기화한 후 비공개 게시합니다.

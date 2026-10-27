@@ -9,3 +9,4 @@ test-results/
 .preview-build/
 preview-dist/
 preview-dist.zip
+dist/
