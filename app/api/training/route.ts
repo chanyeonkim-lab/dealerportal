@@ -1,12 +1,103 @@
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { addCourse, courseSchema, courses, publicCourses, recordParticipation, submitAttempt, trainingReport } from '@/lib/training';
-// DEMO ONLY: no identity provider. Never expose this API outside a trusted local prototype.
-export async function GET(req:Request){const admin=new URL(req.url).searchParams.get('view')==='admin';return NextResponse.json(admin?{courses:courses(),events:trainingReport()}:{courses:publicCourses()});}
-export async function POST(req:Request){try{const body=await req.json();if(body.action==='publish'){const p=courseSchema.safeParse(body.course);if(!p.success)return NextResponse.json({error:p.error.issues[0].message},{status:400});return NextResponse.json({id:addCourse(p.data)},{status:201});}
- const parsed=z.object({action:z.enum(['open','submit']),courseId:z.string(),answers:z.array(z.number().int().min(0).max(2)).length(3).optional()}).safeParse(body);
- if(!parsed.success)return NextResponse.json({error:'Invalid training request.'},{status:400});
- if(parsed.data.action==='open'){recordParticipation(parsed.data.courseId);return NextResponse.json({ok:true});}
- if(!parsed.data.answers)return NextResponse.json({error:'Answer all three questions.'},{status:400});
- return NextResponse.json(submitAttempt(parsed.data.courseId,parsed.data.answers));
- }catch{return NextResponse.json({error:'Unable to process training request.'},{status:400});}}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { currentActor, assertSameOrigin, requireAdmin } from "@/lib/auth";
+import {
+  addCourse,
+  courses,
+  publicCourses,
+  recordParticipation,
+  completeLesson,
+  submitAttempt,
+  trainingReport,
+  previewAssignment,
+  addAssignment,
+  applyAssignments,
+  listAssignments,
+  setAssignmentStatus,
+  publishCourse,
+  accountSummaries,
+} from "@/lib/training";
+import { errorResponse } from "@/lib/http";
+import { AppError } from "@/lib/errors";
+export const runtime = "nodejs";
+export async function GET(req: Request) {
+  try {
+    const actor = currentActor(req);
+    if (new URL(req.url).searchParams.get("view") === "admin")
+      requireAdmin(actor);
+    return NextResponse.json(
+      actor.role === "INTERNAL_ADMIN"
+        ? {
+            courses: courses(actor),
+            enrollments: trainingReport(actor),
+            assignments: listAssignments(actor),
+            accounts: accountSummaries(actor),
+          }
+        : { courses: publicCourses(actor) },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+export async function POST(req: Request) {
+  try {
+    assertSameOrigin(req);
+    const actor = currentActor(req),
+      body = await req.json();
+    if (body.action === "publish" || body.action === "draft")
+      return NextResponse.json(
+        { id: addCourse(body.course, actor, body.action === "publish") },
+        { status: 201 },
+      );
+    if (body.action === "publishDraft") {
+      publishCourse(z.string().parse(body.courseId), actor);
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "previewAssignment")
+      return NextResponse.json(previewAssignment(body.assignment, actor));
+    if (body.action === "assign")
+      return NextResponse.json(addAssignment(body.assignment, actor), {
+        status: 201,
+      });
+    if (body.action === "reapply")
+      return NextResponse.json(applyAssignments(actor));
+    if (body.action === "assignmentStatus") {
+      setAssignmentStatus(
+        z.string().parse(body.id),
+        z.enum(["ACTIVE", "PAUSED"]).parse(body.status),
+        actor,
+      );
+      return NextResponse.json({ ok: true });
+    }
+    const value = z
+      .object({
+        action: z.enum(["open", "completeLesson", "submit"]),
+        enrollmentId: z.string().min(1).max(100),
+        lessonId: z.string().optional(),
+        answers: z.array(z.number().int()).max(20).optional(),
+        requestId: z.string().uuid().optional(),
+      })
+      .strict()
+      .parse(body);
+    if (value.action === "open") {
+      recordParticipation(value.enrollmentId, actor);
+      return NextResponse.json({ ok: true });
+    }
+    if (value.action === "completeLesson") {
+      completeLesson(
+        value.enrollmentId,
+        z.string().min(1).parse(value.lessonId),
+        actor,
+      );
+      return NextResponse.json({ ok: true });
+    }
+    if (!value.answers || !value.requestId)
+      throw new AppError("Answers and a submission ID are required.");
+    return NextResponse.json(
+      submitAttempt(value.enrollmentId, value.answers, value.requestId, actor),
+    );
+  } catch (e) {
+    return errorResponse(e);
+  }
+}

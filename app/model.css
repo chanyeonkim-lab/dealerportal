@@ -1,0 +1,573 @@
+.model-loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  color: #002c5f;
+}
+.model-login {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  min-height: 100dvh;
+  background: white;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+.model-login-story {
+  background: #002c5f;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 56px;
+  overflow: hidden;
+}
+.model-wordmark {
+  color: #fff;
+  text-decoration: none;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: 5px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.model-wordmark span {
+  font-size: 13px;
+  letter-spacing: 0;
+  border-left: 1px solid #6e8cac;
+  padding-left: 18px;
+  font-weight: 400;
+}
+.model-login-story h1 {
+  font-size: clamp(38px, 4.2vw, 64px);
+  font-weight: 400;
+  line-height: 1.14;
+  letter-spacing: -2px;
+  margin: 25px 0;
+}
+.model-login-story p {
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 40ch;
+  color: #e3edf5;
+}
+.model-login-story img {
+  width: 110%;
+  max-width: 640px;
+  display: block;
+  margin: 10px -5%;
+}
+.model-login-story .model-login-foot {
+  font-size: 12px;
+  color: #e3edf5;
+}
+.model-login-form {
+  max-width: 540px;
+  width: 100%;
+  margin: auto;
+  padding: 64px 45px;
+}
+.model-login-form h2 {
+  font-size: 34px;
+  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: -1px;
+  margin: 16px 0;
+}
+.model-login-form > p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #565e67;
+  margin-bottom: 28px;
+}
+.model-kicker {
+  font-size: 14px;
+  color: #002c5f;
+}
+.model-login-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 30px 0;
+}
+.model-login-options button {
+  background: white;
+  border: 1px solid #d0d6dc;
+  color: #1b2939;
+  text-align: left;
+  padding: 16px;
+  font-size: 14px;
+  min-height: 88px;
+}
+.model-login-options button[aria-pressed="true"] {
+  border: 2px solid #002c5f;
+  background: #f4f7fa;
+  padding: 15px;
+}
+.model-login-options small {
+  display: block;
+  font-weight: 400;
+  color: #565e67;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.model-login-form .field {
+  font-size: 13px;
+}
+.model-login-form .primary {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+}
+.model-credentials {
+  margin-top: 28px;
+  color: #4c5764;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.model-credentials summary {
+  cursor: pointer;
+  color: #002c5f;
+}
+.model-login-form .model-login-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  font-size: 12px;
+}
+.model-session {
+  margin: 15px 20px;
+  padding: 14px 0;
+  border-top: 1px solid #e1e4e7;
+  border-bottom: 1px solid #e1e4e7;
+  font-size: 12px;
+  color: #4e5c6b;
+  display: flex;
+  flex-direction: column;
+}
+.model-session .text-button {
+  font-size: 12px;
+  min-height: 30px;
+}
+.model-internal-navigation {
+  padding: 14px 20px;
+  color: #002c5f;
+  font-size: 13px;
+}
+.model-internal-navigation strong {
+  display: block;
+  margin: 12px 0;
+}
+.model-internal-navigation p {
+  line-height: 1.7;
+  color: #535b64;
+  font-size: 12px;
+}
+.model-course-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 35px;
+}
+.model-course-choice {
+  text-align: left;
+  padding: 22px;
+  background: white;
+  border: 1px solid #d7dde3;
+  color: #1a2430;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.model-course-choice.selected {
+  border: 2px solid #002c5f;
+  padding: 21px;
+}
+.model-course-choice > span {
+  font-size: 12px;
+  color: #555e68;
+  line-height: 1.5;
+}
+.model-course-choice strong {
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.model-progress-track {
+  height: 4px;
+  background: #e9edf0;
+  width: 100%;
+}
+.model-progress-track > span {
+  height: 100%;
+  background: #002c5f;
+  display: block;
+}
+.model-learning-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.model-learning-heading h2 {
+  font-size: 34px;
+  line-height: 1.25;
+  font-weight: 400;
+  margin: 0 0 12px;
+  letter-spacing: -1px;
+}
+.model-learning-heading p {
+  font-size: 13px;
+  color: #535b64;
+  line-height: 1.8;
+}
+.model-big-progress {
+  font-size: 52px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.model-big-progress small {
+  display: inline;
+  font-size: 23px;
+}
+.model-steps {
+  display: flex;
+  border-block: 1px solid #e1e4e7;
+  margin: 28px 0;
+  gap: 24px;
+}
+.model-steps button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  color: #59636f;
+  padding: 18px 0;
+  font-size: 14px;
+  border-bottom: 3px solid transparent;
+}
+.model-steps button[aria-current] {
+  color: #002c5f;
+  border-color: #002c5f;
+  font-weight: 600;
+}
+.model-steps button > span {
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+.model-lessons {
+  display: grid;
+  gap: 18px;
+}
+.model-lessons > .primary {
+  justify-self: start;
+  margin-top: 10px;
+}
+.model-lesson {
+  padding: 28px 32px;
+}
+.model-lesson h3 {
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin: 0 0 18px;
+}
+.model-lesson p {
+  font-size: 15px;
+  line-height: 1.85;
+  max-width: 78ch;
+  color: #475360;
+  margin-bottom: 22px;
+}
+.model-quiz form {
+  padding: 8px 30px 30px;
+}
+.model-quiz fieldset {
+  border: 0;
+  border-top: 1px solid #e1e4e7;
+  padding: 28px 0;
+  margin: 0;
+}
+.model-quiz legend {
+  float: left;
+  width: 100%;
+  font-size: 19px;
+  line-height: 1.5;
+  color: #1c2733;
+  margin-bottom: 18px;
+}
+.model-quiz fieldset > label:first-of-type {
+  clear: both;
+}
+.model-quiz legend span {
+  color: #626e7a;
+}
+.model-quiz .option {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 54px;
+  display: flex;
+  gap: 12px;
+}
+.model-grade {
+  padding: 24px 30px;
+  background: #f2f7f4;
+  border-top: 1px solid #dae5df;
+  color: #254b3b;
+}
+.model-grade p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 12px 0;
+}
+.model-empty {
+  padding: 30px;
+  color: #535b64;
+  line-height: 1.7;
+}
+.model-management-intro {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  color: #535b64;
+  font-size: 13px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.model-management-intro > span {
+  color: #002c5f;
+  font-weight: 600;
+}
+.model-management-intro p {
+  margin: 0;
+  flex: 1;
+  line-height: 1.6;
+}
+.model-management-intro .text-button {
+  white-space: nowrap;
+}
+.model-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.model-helper {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #535b64;
+}
+.model-editor-question {
+  border: 1px solid #e1e4e7;
+  margin: 24px 0;
+  padding: 20px;
+}
+.model-editor-question legend {
+  padding: 0 8px;
+  color: #002c5f;
+  font-size: 14px;
+}
+.model-course-summary {
+  padding: 24px 28px;
+  border-top: 1px solid #e1e4e7;
+}
+.model-course-summary h3 {
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+.model-course-summary p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #535b64;
+  white-space: pre-wrap;
+}
+.model-assignment-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+}
+.model-assignment-form > .model-actions,
+.model-assignment-result {
+  grid-column: 1/-1;
+}
+.model-assignment-result {
+  font-size: 14px;
+  color: #254b3b;
+  padding: 16px 0;
+  margin: 0;
+}
+.model-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.model-checkbox input {
+  accent-color: #002c5f;
+}
+.model-filters {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.model-filters .field {
+  min-width: 220px;
+  flex: 1;
+  margin-bottom: 0;
+}
+.model-asset {
+  padding: 26px 28px;
+  border-top: 1px solid #e1e4e7;
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 28px;
+}
+.model-asset h3 {
+  font-size: 23px;
+  font-weight: 400;
+  margin: 0 0 12px;
+}
+.model-asset p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.model-asset small {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #535b64;
+}
+.model-warranties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.model-warranties strong {
+  font-size: 14px;
+}
+.table-wrap select {
+  padding: 8px;
+  border: 1px solid #ccd4dc;
+  background: white;
+  color: #243446;
+  max-width: 170px;
+  min-height: 40px;
+  font-size: 12px;
+}
+@media (max-width: 1000px) {
+  .model-login-story {
+    padding: 36px;
+  }
+  .model-wordmark {
+    font-size: 20px;
+    letter-spacing: 3px;
+  }
+  .model-wordmark span {
+    font-size: 12px;
+  }
+  .model-login-form {
+    padding: 40px 30px;
+  }
+  .model-course-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .model-login {
+    grid-template-columns: 1fr;
+  }
+  .model-login-story {
+    padding: 26px 24px;
+    min-height: 240px;
+  }
+  .model-login-story > div {
+    position: relative;
+  }
+  .model-login-story > div > svg,
+  .model-login-story img,
+  .model-login-foot {
+    display: none;
+  }
+  .model-login-story h1 {
+    font-size: 34px;
+    letter-spacing: -1px;
+    margin: 24px 0 15px;
+  }
+  .model-login-story p {
+    font-size: 13px;
+  }
+  .model-login-form {
+    padding: 30px 24px;
+  }
+  .model-login-form h2 {
+    font-size: 29px;
+  }
+  .model-course-list {
+    grid-template-columns: 1fr;
+  }
+  .model-learning-heading h2 {
+    font-size: 27px;
+  }
+  .model-big-progress {
+    font-size: 38px;
+  }
+  .model-steps {
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .model-steps button {
+    white-space: nowrap;
+    font-size: 12px;
+    gap: 8px;
+  }
+  .model-lesson {
+    padding: 22px;
+  }
+  .model-quiz form {
+    padding: 8px 20px 24px;
+  }
+  .model-assignment-form {
+    grid-template-columns: 1fr;
+  }
+  .model-asset {
+    grid-template-columns: 1fr;
+  }
+  .model-warranties {
+    grid-template-columns: 1fr;
+  }
+  .model-filters .field {
+    min-width: 0;
+    width: 100%;
+  }
+  .model-management-intro {
+    gap: 10px;
+  }
+  .model-management-intro p {
+    min-width: 100%;
+  }
+  .model-editor-question {
+    padding: 14px;
+  }
+  .model-course-choice {
+    padding: 20px;
+  }
+  .model-login-options button {
+    font-size: 13px;
+  }
+  .model-login-form input {
+    font-size: 16px;
+  }
+  .model-session {
+    margin: 10px 20px;
+  }
+}

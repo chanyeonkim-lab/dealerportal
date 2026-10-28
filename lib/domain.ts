@@ -16,7 +16,7 @@ export const extractionSchema = z.object({
 });
 export type Extraction = z.infer<typeof extractionSchema>;
 export const saveContractSchema = z.object({
-  opportunityId: z.enum(['opp-001', 'opp-002', 'opp-003']),
+  opportunityId: z.string().min(1).max(100),
   fields: contractFields,
   reviewed: z.literal(true),
   source: z.enum(['sample', 'live']),

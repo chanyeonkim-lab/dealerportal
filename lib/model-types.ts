@@ -1,0 +1,82 @@
+export type Actor = {
+  id: string;
+  name: string;
+  email: string;
+  role: "INTERNAL_ADMIN" | "DEALER_SALES";
+  contactId: string | null;
+  accountId: string | null;
+  accountName: string | null;
+  market: string;
+};
+export type Question = { question: string; options: string[]; correct: number };
+export type Lesson = { id: string; title: string; body: string };
+export type Source = {
+  id: string;
+  title: string;
+  version: number;
+  status: string;
+  text?: string;
+};
+export type LearnerCourse = {
+  id: string;
+  courseId: string;
+  code: string;
+  version: number;
+  title: string;
+  body: string;
+  lessons: Lesson[];
+  questions: Omit<Question, "correct">[];
+  passMark: number;
+  status: string;
+  progress: number;
+  completedLessons: string[];
+  dueAt: string;
+  reasons: string[];
+  latestScore: number | null;
+  bestScore: number | null;
+  passed: boolean;
+  attempts: {
+    id: string;
+    number: number;
+    score: number;
+    total: number;
+    passed: boolean;
+    submittedAt: string;
+    source: string;
+  }[];
+};
+export type OpportunityView = {
+  id: string;
+  name: string;
+  initials: string;
+  email: string;
+  vehicle: string;
+  stage: string;
+  value: number;
+  action: string;
+  colour: string;
+  accountId: string;
+  accountName: string;
+  salesContactId: string;
+  consultant: string;
+};
+export type AccountSummary = {
+  id: string;
+  name: string;
+  tier: string;
+  lifecycle: string;
+  market: string;
+  staff: number;
+  required: number;
+  completed: number;
+  overdue: number;
+  unassigned: number;
+  completionRate: number | null;
+};
+export type Grade = {
+  score: number;
+  total: number;
+  passed: boolean;
+  feedback: { correct: boolean; answer: number }[];
+  replayed?: boolean;
+};

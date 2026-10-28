@@ -1,41 +1,75 @@
-# Hyundai AU · Dealer Workspace
+# Hyundai Dealer Workspace
 
-Independent interview prototype: a dealer workspace and Hyundai internal management demo. All customers and amounts are fictional. No official Australian vehicle specification or promotion is asserted.
+Independent, fictional-data prototype of a shared dealer CRM and learning portal. The existing Australian demo context is preserved; no official vehicle specification, price, warranty or Hyundai certification is asserted.
 
 ## Run
 
-Node.js 24 (uses built-in `node:sqlite`).
+Node.js 24 is required for built-in SQLite.
 
 ```sh
-npm ci --cache /tmp/dealer-npm
+npm ci
+npm run seed
 npm run dev
 ```
 
-Open the application on port 3000 through your development environment. SQLite records are stored in ignored `.data/`. Use the existing checkout; do not create a Git worktree for ordinary tasks.
-
-For a production-mode local check:
+Open http://localhost:3000. For a production-mode local check:
 
 ```sh
 npm run build
 npm start
 ```
 
-## Demo
+Use this checkout for ordinary work; do not create an extra worktree. Records are stored in ignored `.data/dealer.sqlite`. Set `DEALER_DATA_DIR` to use another directory. Seeding runs automatically on first access and can also be run explicitly; rerunning it preserves existing records.
 
-1. Dealer → New contract → Explore a prepared example.
-2. Edit fields, choose the opportunity, check the review confirmation, save.
-3. Contracts → see the saved record.
-4. Hyundai internal → Sales overview → inspect the contract and pipeline.
-5. Training management → publish a text lesson and its three-question quiz.
-6. Dealer → Learning hub → select the course, answer and submit.
-7. Hyundai internal → Learning performance → see participation, every attempt and knowledge-check status.
-8. Sales assistant → ask about winter range. Without a key, responses are labelled prepared guidance, not live AI.
+## Two demo accounts
 
-## Optional live AI
+| Account | Email | First-run demo password |
+|---|---|---|
+| Dealer consultant Olivia Bennett | dealer@demo.local | DealerDemo!2026 |
+| Hyundai learning team | internal@demo.local | InternalDemo!2026 |
 
-Put a key in ignored `.env.local` as `OPENAI_API_KEY` (or `DEALER_OPENAI_API_KEY` for an environment-settings binding). Never paste keys into chat or commit them. `OPENAI_MODEL` defaults to `gpt-4.1-mini`. Real uploads are sent to OpenAI; only reviewed fields are retained locally. API upload supports JPG, PNG and PDF up to 10 MB. Contract extraction returns schema fields, evidence and warnings. The sales agent calls a read-only guidance search tool.
+The sign-in screen can fill these public demo credentials. They are for fictional records only. `Switch account` signs out and returns to sign-in; it does not turn a dealer session into an administrator.
 
-**Local fictional-data prototype only:** role switching is not authentication; APIs have no authorisation or dealer isolation. Do not deploy publicly or upload real customer contracts. SDK tracing is disabled; this does not establish API Zero Data Retention. No DMS, Salesforce, vector file search, agent handoffs or role-play assessment is connected yet.
+Set `DEALER_DEMO_PASSWORD` and `INTERNAL_DEMO_PASSWORD` before the first seed to override the defaults. Passwords are hashed. Changing these environment variables later does not rotate passwords in an existing database. `APP_ORIGIN` can explicitly set the allowed origin when running behind a reverse proxy.
+
+Sessions use random, hashed server-side tokens and HttpOnly SameSite cookies. APIs check role, dealer, consultant and conversation ownership. This is a small demo login, not enterprise SSO or a production identity deployment.
+
+## Shared data and sample records
+
+The initial seed creates:
+
+- 2 dealer Accounts, 3 employee Contacts and 4 buyer Contacts.
+- 2 User accounts; other Contacts have no login.
+- 3 product models, 5 Opportunities with buyer Contact Roles, 2 Leads.
+- 2 Assets with owning buyer Contacts and 4 fictional AssetWarranty records.
+- 3 versioned Courses, 3 assignment rules, 4 personal Enrollments.
+- 2 labelled prepared quiz attempts and 4 knowledge articles, including an internal-only article.
+
+Foreign keys and unique constraints protect relationships. Published course contents, active assignment definitions and quiz attempts cannot be overwritten. Legacy `contracts`, `audit_events` and any existing legacy learning tables are retained. Name-only legacy learning events are not guessed into new Contact identities.
+
+## Demo walkthrough
+
+1. Sign in as Hyundai internal. Open **Dealer network** to inspect Accounts, employee/customer relationships, vehicles and warranties.
+2. In **Training management**, publish a course version and quiz. Publication alone does not assign it.
+3. In **Assign learning**, select Tier, New status, a dealer or an individual consultant. Preview recipients and apply.
+4. Sign out and sign in as Olivia. Open **Learning hub**, complete assigned lessons and submit the knowledge check.
+5. Retry a quiz or reload. Every attempt and its original course version remain available under **Your progress**.
+6. Sign in as internal and filter **Learning performance** by Account and Contact to see the same records.
+7. Change Geelong Riverside to Tier 1 and assign EV01 to new dealers as well. Priya gets one EV01 enrollment with multiple assignment reasons.
+8. Open **Customers & vehicles** as Olivia. Only her own dealer's assigned customers and related assets appear; colleague and other-dealer records remain excluded.
+9. Ask the **Sales assistant** about winter range or charging. Answers show eligible article versions, and conversation history is private to its owner.
+
+Tier and New status are independent attributes. Stopping a rule prevents new allocations while retaining existing obligations and results. A course completes only when all required lessons are marked complete and its quiz has been passed. Scores use the version's question count and pass mark rather than a hardcoded three-question full-score rule.
+
+## Knowledge chatbot and optional live AI
+
+Without an API key the application returns labelled **Prepared coaching guidance**, not a simulated live model response. No matching article results in an explicit no-source answer.
+
+For live responses, set `OPENAI_API_KEY` or `DEALER_OPENAI_API_KEY` in ignored `.env.local`. Do not paste keys into chat or commit them. `OPENAI_MODEL` preserves the existing `gpt-4.1-mini` default and can be configured. The Agents SDK uses a read-only, server-scoped knowledge tool and structured source references. Source IDs are checked against actual retrieval results; this does not guarantee semantic factuality.
+
+Retrieval filters market, audience, publication status, effective dates and version. Quiz answer keys and customer documents are not searchable. The chatbot cannot inspect an individual VIN's warranty eligibility, change CRM records or perform sales role play. Existing reviewed contract extraction remains available when configured; original uploads are not retained.
+
+SDK tracing remains disabled for the existing document workflow. This does not establish Zero Data Retention. Production SSO, distributed rate limiting, background jobs, consent/retention administration and a full model-based eval framework are outside this build.
 
 ## Validation
 
@@ -43,14 +77,26 @@ Put a key in ignored `.env.local` as `OPENAI_API_KEY` (or `DEALER_OPENAI_API_KEY
 npm test
 npm run typecheck
 npm run build
-# With server running, installed Chromium and a disposable data directory:
+```
+
+Tests use disposable databases and do not call live models. They cover role and object access, cross-site requests, overlapping assignments, immutable versions, submission idempotency, course completion, citations and private chat histories.
+
+For browser checks, start a server against a disposable data directory and install Playwright Chromium:
+
+```sh
+npx playwright install chromium
 npm run test:e2e
 ```
 
-Tests cover contract review gates, invalid financial data, SQLite audit persistence, course publication, quiz grading and attempt history. E2E uses the running server and creates clearly labelled demo data.
+`PLAYWRIGHT_BASE_URL` selects the server and `CHROMIUM_PATH` optionally selects an existing compatible browser. Browser tests create labelled E2E courses and records, so use a disposable `DEALER_DATA_DIR`, not a live demo database. Automated accessibility checks cover sign-in, learning and management screens.
 
-Korean architecture lesson and decision record: [docs/01-architecture.ko.md](docs/01-architecture.ko.md).
+## Design and implementation records
 
-## Public screen preview
+- [Shared data model and process design](docs/03-shared-data-model.ko.md)
+- [Build walkthrough and implementation boundaries](docs/04-shared-model-build.ko.md)
+- [Earlier architecture learning record](docs/01-architecture.ko.md) — historical baseline, predating shared identity and assignment support.
+- [Hyundai visual design record](docs/02-design.ko.md)
 
-`npm run build:preview` exports a browser-only demo into `preview-dist/`. It excludes server routes, keys, SQLite and all existing records. Contracts and course changes stay in the viewer's browser; uploads and live AI calls are disabled. This mode can be hosted statically. Netlify build settings are included in `netlify.toml`. See [preview deployment instructions](docs/preview-deployment.ko.md). Actual hosting account access is still required to issue a public URL.
+## Static screen preview
+
+`npm run build:preview` creates a **read-only design preview** in `preview-dist/`. It contains fictional display fixtures only, no server routes, existing database, credentials or live AI. Sign-in, shared writes, quizzes and chat require the server application. This replaces the old browser-local mutable preview so it cannot be mistaken for the shared-data implementation. Netlify configuration remains available for this static mode.

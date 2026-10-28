@@ -6,7 +6,7 @@ rmSync(stage,{recursive:true,force:true});mkdirSync(stage,{recursive:true});
 cpSync(path.join(root,'app'),path.join(stage,'app'),{recursive:true,filter:p=>p!==path.join(root,'app','api')});
 cpSync(path.join(root,'public'),path.join(stage,'public'),{recursive:true});
 mkdirSync(path.join(stage,'lib'));
-for(const file of ['domain.ts','training-schema.ts','client-api.ts'])cpSync(path.join(root,'lib',file),path.join(stage,'lib',file));
+for(const file of ['domain.ts','training-schema.ts','client-api.ts','model-types.ts'])cpSync(path.join(root,'lib',file),path.join(stage,'lib',file));
 // Only the client-side course type is needed; never copy SQLite or AI server code.
 const adminFile=path.join(stage,'app','admin.tsx');
 writeFileSync(adminFile,readFileSync(adminFile,'utf8').replace("@/lib/training'","@/lib/training-schema'"));

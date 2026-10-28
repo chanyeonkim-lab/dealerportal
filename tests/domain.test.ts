@@ -1,41 +1,141 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { sampleExtraction,saveContractSchema,searchKnowledge } from '../lib/domain';
-import { createContract,listContracts,database } from '../lib/db';
-import { addCourse,courseSchema,publicCourses,recordParticipation,submitAttempt,trainingReport } from '../lib/training';
-process.env.DEALER_DATA_DIR=mkdtempSync(path.join(tmpdir(),'dealer-test-'));
-const valid={opportunityId:'opp-001',fields:sampleExtraction.fields,reviewed:true,source:'sample'};
-test('contract requires human review and a known opportunity',()=>{
- assert.equal(saveContractSchema.safeParse({...valid,reviewed:false}).success,false);
- assert.equal(saveContractSchema.safeParse({...valid,opportunityId:'other'}).success,false);
- assert.equal(saveContractSchema.safeParse(valid).success,true);
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { sampleExtraction, saveContractSchema } from "../lib/domain";
+import { createContract, listContracts, database } from "../lib/db";
+import { actorById } from "../lib/auth";
+import {
+  addCourse,
+  courseSchema,
+  publicCourses,
+  recordParticipation,
+  submitAttempt,
+  trainingReport,
+  addAssignment,
+  completeLesson,
+} from "../lib/training";
+import { retrieveKnowledge } from "../lib/knowledge";
+process.env.DEALER_DATA_DIR = mkdtempSync(path.join(tmpdir(), "dealer-test-"));
+const valid = {
+  opportunityId: "opp-001",
+  fields: sampleExtraction.fields,
+  reviewed: true,
+  source: "sample",
+};
+test("contract requires human review and reviewed financial data", () => {
+  assert.equal(
+    saveContractSchema.safeParse({ ...valid, reviewed: false }).success,
+    false,
+  );
+  assert.equal(saveContractSchema.safeParse(valid).success, true);
+  for (const fields of [
+    { ...valid.fields, deposit: 80000 },
+    { ...valid.fields, totalPrice: -1 },
+    { ...valid.fields, customerName: null },
+    { ...valid.fields, vin: "INVALID" },
+    { ...valid.fields, signedDate: "2026-02-31" },
+  ])
+    assert.equal(
+      saveContractSchema.safeParse({ ...valid, fields }).success,
+      false,
+    );
 });
-test('contract rejects inconsistent money, missing required data and invalid VIN or date',()=>{
- for(const fields of [{...valid.fields,deposit:80000},{...valid.fields,totalPrice:-1},{...valid.fields,customerName:null},{...valid.fields,vin:'INVALID'},{...valid.fields,signedDate:'2026-02-31'}])assert.equal(saveContractSchema.safeParse({...valid,fields}).success,false);
+test("reviewed contract persists with an authorized opportunity and audit actor", () => {
+  const dealer = actorById("user-dealer"),
+    id = createContract(saveContractSchema.parse(valid), dealer),
+    saved = listContracts(dealer).find((c) => c.id === id);
+  assert.equal(saved?.opportunityId, "opp-001");
+  assert.equal(saved?.fields.customerName, "Alex Morgan");
+  assert.equal(
+    database()
+      .prepare("SELECT actor_user_id FROM audit_events WHERE record_id=?")
+      .get(id)?.actor_user_id,
+    dealer.id,
+  );
+  assert.throws(() =>
+    createContract(
+      { ...saveContractSchema.parse(valid), opportunityId: "opp-004" },
+      dealer,
+    ),
+  );
+  assert.throws(() =>
+    createContract(
+      { ...saveContractSchema.parse(valid), opportunityId: "opp-003" },
+      dealer,
+    ),
+  );
 });
-test('reviewed contract persists with its relationship and audit event',()=>{
- const id=createContract(saveContractSchema.parse(valid));
- const saved=listContracts().find(c=>c.id===id);
- assert.equal(saved?.opportunityId,'opp-001');assert.equal(saved?.fields.customerName,'Alex Morgan');
- assert.equal(database().prepare('SELECT count(*) AS n FROM audit_events WHERE record_id=?').get(id)?.n,1);
+test("knowledge retrieval stays market and audience scoped and has no unrelated fallback", () => {
+  const docs = retrieveKnowledge(actorById("user-dealer"), "winter range");
+  assert.ok(docs.length);
+  assert.ok(docs.every((d) => d.id.startsWith("AU-")));
+  assert.match(docs[0].text!, /No Australian trim-specific range/);
+  assert.deepEqual(
+    retrieveKnowledge(actorById("user-dealer"), "allocation policy"),
+    [],
+  );
+  assert.deepEqual(
+    retrieveKnowledge(actorById("user-dealer"), "penguin geology"),
+    [],
+  );
 });
-test('knowledge retrieval stays AU scoped and makes no invented winter range claim',()=>{
- const docs=searchKnowledge('IONIQ 5 winter range');assert.ok(docs.length>0);
- assert.ok(docs.every(d=>d.market==='AU'));assert.match(docs[0].text,/No Australian trim-specific range figure is verified/);
+test("published course needs assignment, hides answer keys and retains both attempts", () => {
+  const admin = actorById("user-internal"),
+    dealer = actorById("user-dealer"),
+    input = courseSchema.parse({
+      title: "Test course",
+      body: "Ask about driving needs and home charging before making a recommendation.",
+      questions: [0, 1, 2].map((i) => ({
+        question: `Test question ${i}?`,
+        options: ["A", "B", "C"],
+        correct: i,
+      })),
+      passMark: 80,
+    }),
+    id = addCourse(input, admin);
+  assert.ok(!publicCourses(dealer).some((c) => c.courseId === id));
+  addAssignment(
+    { courseId: id, targetType: "CONTACT", contactId: dealer.contactId },
+    admin,
+  );
+  const exposed = publicCourses(dealer).find((c) => c.courseId === id)!;
+  assert.ok(exposed);
+  assert.equal("correct" in exposed.questions[0], false);
+  recordParticipation(exposed.id, dealer);
+  assert.equal(
+    submitAttempt(exposed.id, [2, 2, 0], crypto.randomUUID(), dealer).score,
+    0,
+  );
+  assert.equal(
+    submitAttempt(exposed.id, [0, 1, 2], crypto.randomUUID(), dealer).score,
+    3,
+  );
+  assert.notEqual(
+    publicCourses(dealer).find((c) => c.id === exposed.id)!.status,
+    "COMPLETED",
+  );
+  completeLesson(exposed.id, "lesson-1", dealer);
+  const report = trainingReport(admin).find((e) => e.id === exposed.id)!;
+  assert.equal(report.attempts.length, 2);
+  assert.equal(report.status, "COMPLETED");
 });
-test('published course is available without exposing answer key and retains failed and passed attempts',()=>{
- const course=courseSchema.parse({title:'Test course',body:'Ask about driving needs and home charging before making a recommendation.',questions:[0,1,2].map(i=>({question:`Test question ${i}?`,options:['A','B','C'],correct:i}))});
- const id=addCourse(course);const exposed=publicCourses().find(c=>c.id===id);
- assert.ok(exposed);assert.equal('correct' in exposed.questions[0],false);
- recordParticipation(id);
- assert.equal(submitAttempt(id,[2,2,0]).score,0);assert.equal(submitAttempt(id,[0,1,2]).score,3);
- const report=trainingReport().filter(e=>e.course_id===id);
- assert.equal(report.filter(e=>e.type==='opened').length,1);
- assert.equal(report.filter(e=>e.type==='quiz_submitted').length,2);
-});
-test('course validation rejects missing quiz and out-of-range answer keys',()=>{
- assert.equal(courseSchema.safeParse({title:'Test',body:'x'.repeat(40),questions:[]}).success,false);
+test("course validation rejects empty quizzes and missing answer options", () => {
+  assert.equal(
+    courseSchema.safeParse({
+      title: "Test",
+      body: "x".repeat(40),
+      questions: [],
+    }).success,
+    false,
+  );
+  assert.equal(
+    courseSchema.safeParse({
+      title: "Test",
+      body: "x".repeat(40),
+      questions: [{ question: "Question?", options: ["A", "B"], correct: 2 }],
+    }).success,
+    false,
+  );
 });

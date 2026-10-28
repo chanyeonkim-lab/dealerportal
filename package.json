@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "seed": "node --import tsx scripts/seed.ts",
     "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/tmp/dealer-browsers playwright test",
     "build:preview": "node scripts/build-preview.mjs"
   },
